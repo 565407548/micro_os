@@ -1,0 +1,53 @@
+DA_32 EQU 4000H
+DA_LIMIT_4K EQU 8000H
+
+DA_DPL_0 EQU 00H
+DA_DPL_1 EQU 20H
+DA_DPL_2 EQU 40H
+DA_DPL_3 EQU 60H
+
+DA_DR    EQU 90H
+DA_DRW   EQU 92H
+DA_DRWA  EQU 93H
+DA_C     EQU 98H
+DA_CR    EQU 9AH
+DA_CCO   EQU 9CH
+DA_CCOR  EQU 9EH
+
+DA_LDT   EQU 82H
+DA_TaskGate  EQU 85H
+DA_386TSS    EQU 89H
+DA_386CGate  EQU 8CH
+DA_386IGate  EQU 8EH
+DA_368TGate  EQU 8FH
+
+SA_RPL0      EQU 0
+SA_RPL1      EQU 1
+SA_RPL2      EQU 2
+SA_RPL3      EQU 3
+
+SA_TIG       EQU 0 ;GDT
+SA_TIL       EQU 4 ;LDT
+
+PG_P         EQU 1
+PG_RW_R      EQU 0
+PG_RW_W      EQU 2
+PG_US_S      EQU 0
+PG_US_U      EQU 4
+
+;usage: Descriptor base(dd),limit(dd),attr(dw)x
+%macro Descriptor 3
+       dw %2 & 0ffffH
+       dw %1 & 0ffffH
+       db (%1>>16) & 0ffH
+       dw ((%2>>8) & 0F00h) | (%3 & 0f0ffh)
+       db (%1>>24) & 0ffh
+%endmacro
+
+;usage: Gate selector(dw),offset(dd),dcount(db),attr(db)
+%macro Gate 4
+       dw (%2 & 0ffffh)
+       dw %1
+       dw (%3 & 1fh) | ((%4<<8) & 0ff00h)
+       dw ((%2 >> 16) & 0ffffh)
+%endmacro 

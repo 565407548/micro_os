@@ -1,0 +1,29 @@
+//分区类型（0表示没有分区）
+#define NO_PART 0
+#define EXTENDED_PART 5
+#define LINUX_PART 83
+#define ZHENG_PART 92
+
+/*
+31---24：保存驱动程序编号，即设备类型识别编
+23---0：保存设备编号，具体设备具体设计
+号*/
+#define DEVICE_SHIFT 0
+#define DRIVER_SHIFT 24
+/*驱动程序编号用8位二进制表示*/
+#define DRIVER_MASK 0xFF
+/*设备编号用24位二进制表示*/
+#define DEVICE_MASK 0xFFFFFF
+
+#define O_RDONLY 0x01
+#define O_WRONLY 0x02
+#define O_RDWR 0x04
+#define O_CREATE 0x08
+
+#define SEEK_SET 0
+#define SEEK_CURRENT 1
+#define SEEK_END 2
+
+#define FILE_COUNT 32
+#define FILE_DESCRIPTOR_COUNT 200
+#define INODE_COUNT 100

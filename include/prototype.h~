@@ -1,0 +1,98 @@
+
+/*lib/kliba.asm*/
+void disp_str(char *p_str);
+void disp_color_str(char *p_str,int color);
+void out_byte(u16 port,u8 value);
+u8 in_byte(u16 port);
+void port_read(u16 port,char *buf,int length);
+void port_write(u16 port,char *buf,int length);
+void disable_irq(u32 irq);
+void enable_irq(u32 irq);
+void disable_int();
+void enable_int();
+/**/
+
+/*lib/misc.c*/
+void assertion_failure(char *con,char *exp,char *file,char *base_file,int line);
+void spin(char* function_name);
+/**/
+
+/*kernel/protect_mode.c*/
+void init_protect_mode();
+u32 seg2phys(u16 seg);
+/**/
+
+/*kernel/kernel.asm*/
+void restart();
+void save();
+void sys_call();
+/**/
+
+/*kernel/i8259.c*/
+void init_8259A();
+void spurious(int irq);
+void put_irq_handler(int irq,irq_handler handler);
+/**/
+
+/*kernel/main.c*/
+int kernel_main();
+void panic(const char *fmt,...);
+int get_ticks();
+int get_milli_seconds();
+/* void Task_fs(); */
+void TestA();
+void TestB();
+void TestC();
+void TestD();
+/**/
+
+/*kernel/clock.c*/
+void init_clock();
+void clock_handler(int irq);
+void milli_delay(int milli_delay);
+/**/
+
+
+
+/*kernel/syscall.asm*/
+int sendreceive(int function,int src_dest,MESSAGE *p_message);
+void printx(char *buf);
+/**/
+
+
+/*kernel/keyboard.c*/
+void init_keyboard();
+void keyboard_handler(int irq);
+void keyboard_read(TTY *p_tty);
+/**/
+
+/*kernel/console.c*/
+int is_current_console(CONSOLE *p_console);
+void out_char(CONSOLE *p_console,char ch);
+void set_cursor(u32 position);
+void init_console(TTY *p_tty);
+void select_console(int nr_console);
+void set_video_start_addr(u32 addr);
+void scroll_screen(int row);
+void scroll_screen_down(int row);
+void scroll_screen_up(int row);
+void next_line(CONSOLE *p_console);
+void backspace(CONSOLE *p_console);
+void flush();
+/**/
+
+/*kernel/tty.c*/
+void task_tty();
+void in_process(TTY *p_tty,u32 key);
+/* int sys_write(int _unused1,char *buf,int len,PROCESS *p_process); */
+void sys_printx(int _unused1, int _unused2, char *s, PROCESS *p_process);
+/**/
+
+
+/*kernel/systask.c*/
+void task_sys();
+/**/
+
+/*kernel/hd.c*/
+void task_hd();
+/**/

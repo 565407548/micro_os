@@ -1,0 +1,2 @@
+#define TTY_IN_BYTES 256
+#define TTY_OUT_BUF_LEN 50

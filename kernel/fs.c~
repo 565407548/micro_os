@@ -1,0 +1,291 @@
+#include "type.h"
+#include "const.h"
+#include "message.h"
+#include "driver.h"
+#include "console.h"
+#include "tty.h"
+#include "protect_mode.h"
+#include "process.h"
+#include "keyboard.h"
+#include "screen.h"
+#include "hd_const.h"
+#include "hd.h"
+#include "fs_const.h"
+#include "fs.h"
+#include "global.h"
+#include "prototype.h"
+#include "string.h"
+#include "stdio.h"
+#include "stdlib.h"
+
+static u8 fsbuf[SECTOR_SIZE];
+
+static void init_fs();
+static void mkfs();
+static void init_super_block(SUPER_BLOCK *sb,int super_block_first_index,int part_size);
+static void init_imap(int imap_first_index,int imap_sectors_length);
+static void init_smap(int smap_first_index,int smap_sectors_length);
+static void init_inode(int inode_first_index,int root_dir_start_index);
+static void init_data_block(int data_block_first_index);
+
+/*第一块硬盘第一个逻辑分区（逻辑分区编号为5-16,第一个逻辑分区编号为5）*/
+#define ROOT_DEVICE MAKE_DRIVER_DEVICE(DRIVER_HD,MAKE_DEVICE_HD(0,5))
+
+#define WRITE_SECTOR(device,buffer,sector_index) rw_sector(INFO_FS_WRITE,\
+                                                           device,      \
+                                                           (sector_index)*SECTOR_SIZE, \
+                                                           SECTOR_SIZE, \
+                                                           TASK_FS,     \
+                                                           buffer)
+#define READ_SECTOR(device,buffer,sector_index) rw_sector(INFO_FS_READ, \
+                                                          device,       \
+                                                          (sector_index)*SECTOR_SIZE, \
+                                                          SECTOR_SIZE,  \
+                                                          TASK_FS,      \
+                                                          buffer)
+
+void task_fs(){
+    printf("task fs begins!\n");
+    init_fs();
+    spin("FS");
+}
+
+int rw_sector(int type,int device,u64 position,int length,int pid,void *buffer){
+    MESSAGE message;
+    message.type=type;
+    message.device=device;
+    message.position=position;
+    message.length=length;
+    message.r_point=buffer;
+    message.source_pid=pid;
+    assert(dd_map[DRIVER(device)].driver_pid!=PID_INVALID,"");
+
+    send_receive(BOTH,dd_map[DRIVER(device)].driver_pid,&message);
+    return 0;
+}
+
+//return file descriptor
+int open(const char *pathname,int flag,int mode){
+    MESSAGE message;
+    message.type=INFO_FS_OPEN_FILE;
+    message.device=ROOT_DEVICE;
+    message.r_point=pathname;
+    message.flag=flag;
+    message.mode=mode;
+    assert(dd_map[DRIVER(device)].driver_pid!=PID_INVALID,"");
+
+    send_receive(BOTH,dd_map[DRIVER(device)].driver_pid,&message);
+    return message.r_int;
+}
+
+//return file descriptor
+int write(int fd,const void *buf,int length){
+
+}
+
+//return file descriptor
+int read(int fd,void *buf,int length){
+
+}
+
+//return file descriptor
+int close(int fd){
+    
+}
+
+static void init_fs(){
+    MESSAGE message;
+    message.type=INFO_FS_DEVICE;
+    message.device=ROOT_DEVICE;
+    assert(dd_map[DRIVER(ROOT_DEVICE)].driver_pid!=PID_INVALID,"");
+    send_receive(BOTH,dd_map[DRIVER(ROOT_DEVICE)].driver_pid,&message);
+
+    mkfs();
+#ifdef DEBUG_FS
+    //write test
+    /* memset(fsbuf,0x23,SECTOR_SIZE); */
+    /* WRITE_SECTOR(ROOT_DEVICE,fsbuf,1); */
+    //read test
+    READ_SECTOR(ROOT_DEVICE,fsbuf,1);
+    printf("read test:\nfsbuf[0]=%x fsbuf[1]=%x fsbuf[2]=%x fsbuf[3]=%x\n",fsbuf[0],fsbuf[1],fsbuf[2],fsbuf[3]);
+#endif
+}
+
+static void mkfs(){
+    MESSAGE message;
+    
+    HD_PART_INFO part_info;
+    message.type=INFO_FS_IOCTL;
+    message.subtype=DIOCTL_GET_PART_INFO;
+    message.device=ROOT_DEVICE;//-------------需要指定到具体分区--------------------
+    message.r_point=(void*)&part_info;
+    message.source_pid=TASK_FS;
+    assert(dd_map[DRIVER(message.device)].driver_pid!=PID_INVALID,"driver not exist!");
+    send_receive(BOTH,dd_map[DRIVER(message.device)].driver_pid,&message);
+    
+#ifdef DEBUG_FS
+    printf("device=%d base=%d size=%d (in sector)\n",DEVICE(message.device),part_info.base,part_info.size);
+#endif
+
+    SUPER_BLOCK sb;
+    //super block
+    int super_block_first_index=BOOT_SECTORS_LENGTH;
+    init_super_block(&sb,super_block_first_index,part_info.size);
+#ifdef DEBUG_FS
+    printf("init_super_block ok(start_sector=%d)\n",super_block_first_index);
+#endif
+    //imap
+    int imap_first_index=super_block_first_index+SUPER_SECTORS_LENGTH;
+    int imap_sectors_length=sb.imap_sectors_length;
+    init_imap(imap_first_index,imap_sectors_length);
+#ifdef DEBUG_FS
+    printf("init_imap ok(start_sector=%d)\n",imap_first_index);
+#endif
+    //smap
+    int smap_first_index=imap_first_index+imap_sectors_length;
+    int smap_sectors_length=sb.smap_sectors_length;
+    init_smap(smap_first_index,smap_sectors_length);
+#ifdef DEBUG_FS
+    printf("init_smap ok(start_sector=%d)\n",smap_first_index);
+#endif
+    //inode
+    int inode_first_index=smap_first_index+smap_sectors_length;
+    int inode_sectors_length=sb.inodes_sectors_length;
+    int root_dir_start_index=sb.data_first_sector_index;
+    init_inode(inode_first_index,root_dir_start_index);    
+#ifdef DEBUG_FS
+    printf("init_inode ok(start_sector=%d)\n",inode_first_index);
+#endif
+    //data
+    int data_block_first_index=inode_first_index+inode_sectors_length;
+    init_data_block(data_block_first_index);
+#ifdef DEBUG_FS
+    printf("init_data_block ok(start_sector=%d)\n",data_block_first_index);
+#endif
+}
+
+static void init_super_block(SUPER_BLOCK *sb,int super_block_first_index,int part_size){
+    sb->magic=MAGIC_V1;
+    sb->inodes_length=BITS_PER_SECTOR;
+    sb->inodes_sectors_length=(sb->inodes_length*INODE_SIZE+SECTOR_SIZE-1)/SECTOR_SIZE;
+    sb->sectors_length=part_size;
+    sb->imap_sectors_length=sb->inodes_length/(SECTOR_SIZE*BITS_PER_BYTE);
+    sb->smap_sectors_length=sb->sectors_length/BITS_PER_SECTOR+1;
+    sb->data_first_sector_index=BOOT_SECTORS_LENGTH+SUPER_SECTORS_LENGTH+sb->imap_sectors_length+sb->smap_sectors_length+sb->inodes_sectors_length;
+    sb->root_dir_inode_index=ROOT_DIR_INODE_INDEX;
+    INODE inode;
+    sb->inode_size=INODE_SIZE;
+    sb->inode_isize_off=(int)&inode.i_size-(int)&inode;
+    sb->inode_start_off=(int)&inode.i_start_sector_index-(int)&inode;
+    DIR_ENTRY dir_entry;
+    sb->dir_entry_size=DIR_ENTRY_SIZE;
+    sb->dir_entry_inode_off=(int)&dir_entry.inode_index-(int)&dir_entry;
+    sb->dir_entry_fname_off=(int)&dir_entry.name-(int)&dir_entry;
+
+    memset(fsbuf,0x80,SECTOR_SIZE);
+    memcpy(fsbuf,sb,SUPER_BLOCK_SIZE);
+
+#ifdef DEBUG_FS
+    printf("fsbuf[0]=%d\n",*(int*)fsbuf);
+#endif
+    WRITE_SECTOR(ROOT_DEVICE,fsbuf,super_block_first_index);
+}
+
+static void init_imap(int imap_first_index,int imap_sectors_length){
+    int bit_index,sector_index;
+
+    memset(fsbuf,0,SECTOR_SIZE);
+    sector_index=0;
+    //0:reserved;1:/;2:tty0;3:tty1;4:tty2
+    for(bit_index=0;bit_index<(NR_CONSOLES+2);bit_index++){
+        fsbuf[0]|=1<<bit_index;
+    }
+    assert(fsbuf[0]=0x1F,"");
+#ifdef DEBUG_FS
+    printf("fsbuf[0]=%d\n",*(int*)fsbuf);
+#endif
+    WRITE_SECTOR(ROOT_DEVICE,fsbuf,imap_first_index+sector_index);
+
+    memset(fsbuf,0,SECTOR_SIZE);
+    for(sector_index=1;sector_index<imap_sectors_length;sector_index++){
+        WRITE_SECTOR(ROOT_DEVICE,fsbuf,imap_first_index+sector_index);
+    }
+}
+
+static void init_smap(int smap_first_index,int smap_sectors_length){
+    int byte_index,bit_index,sector_index;
+    //[0,1):reserved;[1,DEFAULT_FILE_SECTOR_LENGTH):(for root directory);
+    int sectors_length=DEFAULT_FILE_SECTOR_LENGTH+1;
+
+    memset(fsbuf,0,SECTOR_SIZE);
+    sector_index=0;
+    for(byte_index=0;byte_index<sectors_length/BITS_PER_BYTE;byte_index++){
+        fsbuf[byte_index]=0xFF;
+    }
+    for(bit_index=0;bit_index<sectors_length%BITS_PER_BYTE;bit_index++){
+        fsbuf[byte_index]|=(1<<bit_index);
+    }
+    
+    WRITE_SECTOR(ROOT_DEVICE,fsbuf,smap_first_index+sector_index);
+    
+    memset(fsbuf,0,SECTOR_SIZE);
+    for(sector_index=1;sector_index<smap_sectors_length;sector_index++){
+        WRITE_SECTOR(ROOT_DEVICE,fsbuf,smap_first_index+sector_index);
+    }
+}
+
+static void init_inode(int inode_first_index,int root_dir_start_index){
+    int inode_index;
+
+    memset(fsbuf,0,SECTOR_SIZE);
+    INODE *pinode=NULL;
+    
+    inode_index=1;// inode_index=1:.;inode_index=0:reserved
+    pinode=(INODE*)(fsbuf+inode_index*INODE_SIZE);
+    pinode->i_mode=I_DIRECTORY;
+    pinode->i_size=DIR_ENTRY_SIZE*4;//.,dev_tty0,dev_tty1,dev_tty2
+    pinode->i_start_sector_index=root_dir_start_index;
+    //pinode->i_sectors_length=DEFAULT_FILE_SECTOR_LENGTH*(1+NR_CONSOLES);
+    pinode->i_sectors_length=DEFAULT_FILE_SECTOR_LENGTH;
+    assert(inode_index==ROOT_DIR_INODE_INDEX,"");    
+
+    for(inode_index=2;inode_index<2+NR_CONSOLES;inode_index++){
+        pinode=(INODE*)(fsbuf+inode_index*INODE_SIZE);
+        pinode->i_mode=I_CHAR_SPECIAL;
+        pinode->i_size=0;
+        pinode->i_start_sector_index=MAKE_DRIVER_DEVICE(DRIVER_TTY,inode_index-2);
+        pinode->i_sectors_length=0;
+    }
+    WRITE_SECTOR(ROOT_DEVICE,fsbuf,inode_first_index);
+}
+
+static void init_data_block(int data_block_first_index){
+    int dir_entry_index;
+    memset(fsbuf,0,SECTOR_SIZE);
+    
+    dir_entry_index=0;
+    DIR_ENTRY *dir_entry=((DIR_ENTRY*)fsbuf)+dir_entry_index;
+    dir_entry->inode_index=ROOT_DIR_INODE_INDEX;
+    strcpy(dir_entry->name,".");
+#ifdef DEBUG_FS
+    printf("dir_name=%s inode_index=%d\n",dir_entry->name,*(int *)fsbuf);
+#endif
+
+    for(dir_entry_index=1;dir_entry_index<=NR_CONSOLES;dir_entry_index++){
+        dir_entry=((DIR_ENTRY*)fsbuf)+dir_entry_index;
+        dir_entry->inode_index=ROOT_DIR_INODE_INDEX+dir_entry_index;
+        sprintf(dir_entry->name,"dev_tty%d",dir_entry_index);
+#ifdef DEBUG_FS
+        printf("dir_name=%s\n",dir_entry->name);
+#endif
+    }
+
+#ifdef DEBUG_FS
+    printf("fsbuf[0]=%d\n",*(int*)(fsbuf));
+    printf("fsbuf[1]=%d\n",*(int*)(fsbuf+16));
+    printf("fsbuf[2]=%d\n",*(int*)(fsbuf+32));
+    printf("fsbuf[3]=%d\n",*(int*)(fsbuf+48));
+#endif
+
+    WRITE_SECTOR(ROOT_DEVICE,fsbuf,data_block_first_index);
+}

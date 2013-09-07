@@ -1,0 +1,23 @@
+        mov al,'k'
+        push ax
+        call DispChar
+        pop ax
+        
+        jmp $
+
+;;; void DispChar(char al)
+DispChar:
+        push bp
+        mov bp,sp
+        push ax
+        push bx
+
+        mov al,byte[bp+4]
+        mov ah,0Eh
+        mov bl,0Fh
+        int 10h
+        
+        pop bx
+        pop ax
+        pop bp
+        ret

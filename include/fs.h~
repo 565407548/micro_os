@@ -1,0 +1,75 @@
+/*
+分区类型
+可通过以下命令查看：
+1.>> fdisk 80m.img
+2.>> l
+DRIVER:驱动程序/驱动程序编号
+DEVICE:设备编号，具体设备具体设计
+*/
+#define MAGIC_V1 31
+#define BOOT_SECTORS_LENGTH 1
+#define SUPER_SECTORS_LENGTH 1
+#define ROOT_DIR_INODE_INDEX 1
+#define MAX_FILENAME_LENGTH 12
+#define DEFAULT_FILE_SECTOR_LENGTH 2
+
+//文件类型
+#define I_DIRECTORY 0x01
+#define I_CHAR_SPECIAL 0x02
+
+//超级块结构体
+typedef struct s_super_block{
+    u32 magic;
+    u32 inodes_length;
+    u32 sectors_length;
+    u32 imap_sectors_length;
+    u32 smap_sectors_length;
+    u32 data_first_sector_index;
+    u32 inodes_sectors_length;
+    u32 root_dir_inode_index;
+    u32 inode_size;
+    u32 inode_isize_off;
+    u32 inode_start_off;
+    u32 dir_entry_size;
+    u32 dir_entry_inode_off;
+    u32 dir_entry_fname_off;
+
+
+    int super_block;
+}SUPER_BLOCK;
+#define SUPER_BLOCK_SIZE 56
+
+
+//inode结构体
+typedef struct s_inode{
+    u32 i_mode;
+    u32 i_size;
+    u32 i_start_sector_index;
+    u32 i_sectors_length;
+    u8 res[16];
+
+
+    int i_device;
+    int i_share_count;
+    int i_length;
+}INODE;
+#define INODE_SIZE 32
+
+
+typedef struct s_dir_entry{
+    u32 inode_index;
+    char name[MAX_FILENAME_LENGTH];
+}DIR_ENTRY;
+
+//macro
+#define DIR_ENTRY_SIZE sizeof(struct s_dir_entry)
+
+#define MAKE_DRIVER_DEVICE(driver,device) (((driver & DRIVER_MASK) << DRIVER_SHIFT) | \
+                                 ((device & DEVICE_MASK) << DEVICE_SHIFT))
+#define DRIVER(x) ( (x>>DRIVER_SHIFT) & DRIVER_MASK )
+#define DEVICE(x) ( x & DEVICE_MASK )
+
+
+//function
+void task_fs();
+int rw_sector(int type,int device,u64 position,int length,int pid,void *buffer);

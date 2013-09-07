@@ -1,0 +1,30 @@
+int display_position;
+int ticks;
+u8 gdt_ptr[6];
+DESCRIPTOR gdt[GDT_SIZE];
+u8 idt_ptr[6];
+GATE idt[IDT_SIZE];
+u32 k_reenter;
+TSS tss;
+PROCESS *p_process_ready;
+int nr_current_console;
+BOOL key_pressed;
+/*for test*/
+int screen_start_addr;
+
+extern PROCESS process_table[];
+extern TASK task_table[];
+extern TASK user_proc_table[];
+
+extern irq_handler irq_table[];
+extern char task_stack[];
+extern system_call sys_call_table[];
+
+extern TTY tty_table[];
+extern TTY *TTY_FIRST;
+extern TTY *TTY_END;
+extern CONSOLE console_table[];
+
+extern DRIVER_DEVICE_MAP dd_map[];
+
+

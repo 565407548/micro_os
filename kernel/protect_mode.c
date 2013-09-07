@@ -1,0 +1,222 @@
+#include "stdlib.h"
+
+#include "message.h"
+#include "protect_mode.h"
+#include "../fs/include/fs.h"
+#include "process.h"
+#include "tty.h"
+#include "console.h"
+#include "driver.h"
+#include "kliba.h"
+#include "global.h"
+
+#include "kliba.h"
+#include "kernel.h"
+#include "i8259a.h"
+#include "stdio.h"
+#include "string.h"
+//注意头文件的次序，如：由于protect_mode.h中定义了DESCRIPTOR,而global中使用了它的定义，所以protect_mode.h必须在global.h的前面
+
+
+void divide_error();
+void single_step_exception();
+void nmi();
+void breakpoint_exception();
+void overflow();
+void bounds_check();
+void inval_opcode();
+void copr_not_available();
+void double_fault();
+void copr_seg_overrun();
+void inval_tss();
+void segment_not_present();
+void stack_exception();
+void general_protection();
+void page_fault();
+void copr_error();
+
+void hwint00();
+void hwint01();
+void hwint02();
+void hwint03();
+void hwint04();
+void hwint05();
+void hwint06();
+void hwint07();
+void hwint08();
+void hwint09();
+void hwint10();
+void hwint11();
+void hwint12();
+void hwint13();
+void hwint14();
+void hwint15();
+
+void exception_handler(int vec_no,int error_code,int eip,int cs,int eflags){
+    /* int i; */
+    int text_color=0x74;
+
+    char *err_msg[]={"#DE divide error",
+                         "#DB reserved",
+                         "--  MNI interrupt",
+                         "BP breakpoint",
+                         "OF overflow",
+                         "BR bound range exceeded",
+                         "UD invalid opcode",
+                         "NM devide not available",
+                         "DF double fault",
+                         "    coprocessor segment overrun",
+                         "TS invalid tss",
+                         "NP segment not present",
+                         "SS stack segment fault",
+                         "GP general protection",
+                         "PF page fault",
+                         "--  (intel reserved,not use)",
+                         "MF floating-point error",
+                         "AC alignment check",
+                         "MC machine check",
+                         "XF simd floating-point exception"};
+    /* display_position=0; */
+    /* for(i=0;i<80*5;i++){ */
+    /*     disp_str(" "); */
+    /* } */
+    /* display_position=0; */
+    
+    disp_color_str("Exception:",text_color);
+    disp_color_str(err_msg[vec_no],text_color);
+    disp_color_str("\n",text_color);
+    disp_color_str("eflags:",text_color);
+    disp_int(eflags);
+    disp_color_str("CS:",text_color);
+    disp_int(cs);
+    disp_color_str("EIP",text_color);
+    disp_int(eip);
+
+    if(error_code != 0xFFFFFFFF)
+    { 
+        disp_color_str("Error code:",text_color);
+        disp_int(error_code);
+    }
+}
+
+static void init_idt_desc(unsigned char vector,u8 desc_type,
+                          int_handler handler,unsigned char privilige)
+{
+    GATE * p_gate=&idt[vector];
+    u32 base=(u32)handler;
+    p_gate->offset_low=base & 0xFFFF;
+    p_gate->selector=SELECTOR_KERNEL_CS;
+    p_gate->dcount=0;
+    p_gate->attr=desc_type|(privilige << 5);
+    p_gate->offset_high=(base>>16) & 0xFFFF;//开始错误写成p_gate->offset_high=(base>>16) & 0xFFFF
+}
+
+static void init_descriptor(DESCRIPTOR *p_desc,u32 base,u32 limit,u16 attribute){
+    p_desc->limit_low=limit & 0xFFFF;
+    p_desc->base_low=base & 0xFFFF;
+    p_desc->base_mid=(base >> 16) & 0xFFFF;
+    p_desc->attr1=attribute & 0xFF;
+    p_desc->limit_high_and_attr2=((limit>>16)&0x0F) | ((attribute>>8)&0xF0);
+    p_desc->base_high=(base>>24) & 0xFF;
+}
+
+u32 seg2phys(u16 seg){
+    DESCRIPTOR *p_dest=&gdt[seg>>3];
+    return (p_dest->base_high<<24 | p_dest->base_mid<<16 |p_dest->base_low);
+}
+
+void init_protect_mode(){
+    init_8259A();
+
+    init_idt_desc(INT_VECTOR_DIVIDE,DA_386IGate,
+                  divide_error,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_DEBUG,DA_386IGate,
+                  single_step_exception,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_NMI,DA_386IGate,
+                  nmi,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_BREAKPOINT,DA_386IGate,
+                  breakpoint_exception,PRIVILIGE_USER);
+    init_idt_desc(INT_VECTOR_OVERFLOW,DA_386IGate,
+                  overflow,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_BOUNDS,DA_386IGate,
+                  bounds_check,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_INVAL_OP,DA_386IGate,
+                  inval_opcode,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_COPROC_NOT,DA_386IGate,
+                  copr_not_available,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_DOUBLE_FAULT,DA_386IGate,
+                  double_fault,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_COPROC_SEG,DA_386IGate,
+                  copr_seg_overrun,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_INVAL_TSS,DA_386IGate,
+                  inval_tss,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_SEG_NOT,DA_386IGate,
+                  segment_not_present,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_STACK_FAULT,DA_386IGate,
+                  stack_exception,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_PROTECTION,DA_386IGate,
+                  general_protection,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_PAGE_FAULT,DA_386IGate,
+                  page_fault,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_COPROC_ERR,DA_386IGate,
+                  copr_error,PRIVILIGE_KERNEL);
+
+    init_idt_desc(INT_VECTOR_IRQ0+0,DA_386IGate,
+                  hwint00,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_IRQ0+1,DA_386IGate,
+                  hwint01,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_IRQ0+2,DA_386IGate,
+                  hwint02,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_IRQ0+3,DA_386IGate,
+                  hwint03,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_IRQ0+4,DA_386IGate,
+                  hwint04,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_IRQ0+5,DA_386IGate,
+                  hwint05,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_IRQ0+6,DA_386IGate,
+                  hwint06,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_IRQ0+7,DA_386IGate,
+                  hwint07,PRIVILIGE_KERNEL);
+
+    init_idt_desc(INT_VECTOR_IRQ8+0,DA_386IGate,
+                  hwint08,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_IRQ8+1,DA_386IGate,
+                  hwint09,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_IRQ8+2,DA_386IGate,
+                  hwint10,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_IRQ8+3,DA_386IGate,
+                  hwint11,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_IRQ8+4,DA_386IGate,
+                  hwint12,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_IRQ8+5,DA_386IGate,
+                  hwint13,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_IRQ8+6,DA_386IGate,
+                  hwint14,PRIVILIGE_KERNEL);
+    init_idt_desc(INT_VECTOR_IRQ8+7,DA_386IGate,
+                  hwint15,PRIVILIGE_KERNEL);
+
+    init_idt_desc(INT_VECTOR_SYS_CALL,DA_386IGate,
+                  sys_call,PRIVILIGE_USER);
+
+    memset(&tss,0,sizeof(tss));
+    tss.ss0=SELECTOR_KERNEL_DS;
+    init_descriptor(&gdt[INDEX_TSS],
+                    vir2phys(seg2phys(SELECTOR_KERNEL_DS),&tss),
+                    sizeof(tss)-1,
+                    DA_386TSS);
+    tss.iobase=sizeof(tss);
+
+    int i=0;
+    PROCESS *p_process=process_table;
+    u16 selector_ldt=INDEX_LDT_FIRST<<3;
+    for(i=0;i<NR_TASKS+NR_PROCS;i++){
+        init_descriptor(&gdt[selector_ldt>>3],
+                        vir2phys(seg2phys(SELECTOR_KERNEL_DS),process_table[i].ldts),
+                        LDT_SIZE*sizeof(DESCRIPTOR)-1,
+                        DA_LDT);
+        p_process++;
+        selector_ldt+=1<<3;
+    }
+}
+
+

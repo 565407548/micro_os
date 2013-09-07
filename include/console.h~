@@ -1,0 +1,33 @@
+#include "console_const.h"
+
+typedef struct s_console{
+    u32 current_start_addr;
+    u32 original_addr;
+    u32 v_mem_limit;
+    u32 cursor;
+    
+    u8 color;/*前景背景色*/
+}CONSOLE;
+
+/*kernel/console.c*/
+
+void init_console(TTY *p_tty);
+int is_current_console(CONSOLE *p_console);
+
+void set_color(CONSOLE *p_console,u8 fore_color,u8 back_color);
+void set_back_color(CONSOLE *p_console,u8 back_color);
+void set_fore_color(CONSOLE *p_console,u8 fore_color);
+u8 get_back_color(CONSOLE *p_console);
+u8 get_fore_color(CONSOLE *p_console);
+
+void out_char(CONSOLE *p_console,char ch);
+void set_cursor(u32 position);
+void select_console(int nr_console);
+void set_video_start_addr(u32 addr);
+void scroll_screen(int row);
+void scroll_screen_down(int row);
+void scroll_screen_up(int row);
+void next_line(CONSOLE *p_console);
+void backspace(CONSOLE *p_console);
+void flush();
+/**/

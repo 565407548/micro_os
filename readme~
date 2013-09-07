@@ -1,0 +1,63 @@
+1.创建软盘,硬盘
+   >>bximage
+   注意：
+       创建软盘在bochsrc中添加配置信息：
+             floppya:1_44=a.img,status=inserted
+       创建硬盘后在bochsrc添加配置信息（创建结束后bximage会给出提示）：
+             ata0-master:type=disk,path="80m.img",mode=flat,cylinders=162,heads=16,spt=63
+2.运行OS
+   >>bochs -f bochsrc
+
+3.启动扇区
+   每一个扇区512字节，启动扇区以0xaa55结束
+
+4.xxd:十六进制显示文件内容
+   xxd -s offset -l length -u uppercase 
+   xxd --help
+
+5.强制关闭bochs
+   kill -9 `ps|grep 'bochs'|awk '{print $1}'`
+   killall -9 bochsrc
+
+6.测试内存空间情况
+   00000000h 00000000h 0009F000h 00000000h 00000001h //可以被操作系统使用
+   0009F000h 00000000h 00001000h 00000000h 00000002h //不能被操作系统使用
+   000E8000h 00000000h 00018000h 00000000h 00000002h
+   00100000h 00000000h 01EF0000h 00000000h 00000001h
+   01FF0000h 00000000h 00010000h 00000000h 00000003h //非1、2，会被认为保留
+   FFFC0000h 00000000h 00040000h 00000000h 00000002h
+
+7.汇编.asm文件，c的.h文件，c的.c文件三者之间的协同工作
+  汇编里面定义的函数，需要用global导出，这样其他文件才可以调用它
+  汇编里面使用外部定义的函数或者变量，需要用extern导入，才可以使用它
+  不管是.asm里定义的全局函数还是.c中定义的全局函数，在包含的头文件中或者当前文件中包含对应函数的声明，如
+       1.kernel.asm中定义了各种中断处理函数hwint**,同时通过global导出，在protect_mode.c中还是包含了对应函数的申明
+       2.如klib.c中包含了disp_int的定义，在prototype.h中包含其声明，如果要调用该函数，那么调用函数只需要包含prototype.h就可以了
+       3.如kliba.asm中包含了disp_str的定义，在prototype.h中包含了其申明，如果要调用该函数，那么调用函数只需要包含prototype.h就可以了。
+
+8.GP,generl protection错误
+  1.在最开始进行进程调度时，把进程的初始化ds,es,等寄存器的值初始化为代码段地址，引发GP错误，应为代码段为只读段(kernel/main.c的kernel_main函数中)
+  2.在处理进程重入，引入re_enter时，出现错误："fetch_raw_descriptor: LDT: index (7ff) ff > limit (f)"？该问题由于在没有判断内核是否重入的时候就进行内核栈的切换，导致再次进入时，栈指针出问题，从而导致GP
+
+9.在添加多个进程，实现多进程调度时，错误的把所有进程的堆栈初始化成相同的地址，导致多个进程只循环执行一遍之后，一直执行最后一个进程，原因为：
+  所有进程的堆栈都指向相同的起始地址，进程第一次执行时，进程的eip时直接指定的，是正确的。但是当执行完第一遍后，之后寄存器的值（eip，esp等）都是从堆栈中获得的，而这会获得错误的eip，此时eip实际指向的是第一次循环最后一个执行的进程的eip，所以外在表现就是最后一个执行的程序会一直执行下去。
+
+10.在添加进程调度schedule(),在kernel_main函数中给TestA,TestB,TestC分别设置优先级后，添加task_tty,外在表现为该进程没有运行
+ 原因：该进程没有给初始优先级，其在进程调度中永远得不到运行。通过给所有进程都设置相同优先级，所有进程都会得到运行。
+
+11.在添加sys_send_receive后，产生GP错误。后定位错位发生在printf函数，进一步定位，发现错误在write，而此时，知道错误是由于sys_call_table出问题，经过查证，发现sys_call_table数组的长度应该为2，而由于多次改动把其改为1后没有更新
+
+12.函数参数传递的都是地址，具体参考vspringf函数
+
+13.os进程间通行问题暂时解决
+    13.1 系统调用（write、sendreceive）函数开始实现有两个问题
+          a，没有保存当前寄存器的值
+          b，最后没有“ret”语句，导致不返回
+    13.2 vsprintf.c中的vsprintf()n函数在结尾出没有设置字符串结束标志（*p=0）
+    13.3 处理过程再次显示进程调度基本正常
+    13.4 在send_receive()之前，必须指定消息成员source的值，即以下两句必须同时出现，且顺序不能改变：
+           message.source=process2pid(p_process_ready);
+           send_receive(SEND,src,&message); 
+
+14.中文显示乱码
+    中断只支持ascii码显示，不支持unicode码

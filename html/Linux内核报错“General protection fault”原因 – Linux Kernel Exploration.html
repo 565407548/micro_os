@@ -1,0 +1,725 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- saved from url=(0031)http://ilinuxkernel.com/?p=1388 -->
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en-US"><!--BEGIN head--><head profile="http://purl.org/uF/hAtom/0.1/ http://purl.org/uF/2008/03/"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+	<title>Linux内核报错“General protection fault”原因 – Linux Kernel Exploration</title>
+
+	<!-- Meta Tags -->
+	
+	<meta name="generator" content="WordPress">
+
+	<!-- Stylesheets -->
+	<link rel="stylesheet" href="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/style.css" type="text/css" media="screen, projection">
+	<link rel="stylesheet" href="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/print.css" type="text/css" media="print">
+  
+
+  <!-- Custom Stylesheets -->
+  
+         
+   <style type="text/css"> 
+  ul.slides li.slide {
+display:block !important; }
+</style>    
+
+   
+   
+     
+   <style type="text/css">#backtotop {right:3%;} </style>
+   
+     
+	<!-- Theme Hook -->
+    
+  
+	     
+
+       
+
+
+<link rel="alternate" type="application/rss+xml" title="Linux Kernel Exploration » Feed" href="http://ilinuxkernel.com/?feed=rss2">
+<link rel="alternate" type="application/rss+xml" title="Linux Kernel Exploration » Comments Feed" href="http://ilinuxkernel.com/?feed=comments-rss2">
+<link rel="alternate" type="application/rss+xml" title="Linux Kernel Exploration » Linux内核报错“General protection fault”原因 Comments Feed" href="http://ilinuxkernel.com/?feed=rss2&p=1388">
+<link rel="stylesheet" id="googlefont-css" href="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/css" type="text/css" media="all">
+<link rel="stylesheet" id="jetpack-widgets-css" href="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/widgets.css" type="text/css" media="all">
+<link rel="stylesheet" id="core3.0-css" href="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/shCore.css" type="text/css" media="all">
+<link rel="stylesheet" id="core-Eclipse3.0-css" href="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/shCoreEclipse.css" type="text/css" media="all">
+<link rel="stylesheet" id="theme-Eclipse3.0-css" href="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/shThemeEclipse.css" type="text/css" media="all">
+<script type="text/javascript" src="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/jquery.js"></script>
+<script type="text/javascript" src="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/tipsy.js"></script>
+<script type="text/javascript" src="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/fields.js"></script>
+<script type="text/javascript" src="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/jquery.scroll.pack.js"></script>
+<script type="text/javascript" src="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/supersubs.js"></script>
+<script type="text/javascript" src="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/superfish.js"></script>
+<script type="text/javascript" src="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/buttons.js"></script>
+<script type="text/javascript" src="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/comment-reply.js"></script>
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="http://ilinuxkernel.com/xmlrpc.php?rsd">
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="http://ilinuxkernel.com/wp-includes/wlwmanifest.xml"> 
+<link rel="prev" title="[转]Local and Remote Memory: Memory in a Linux NUMA System" href="http://ilinuxkernel.com/?p=1378">
+<link rel="next" title="[转]GoAgent图文设置教程：碉堡了，从此无限制上网" href="http://ilinuxkernel.com/?p=1400">
+
+<link rel="canonical" href="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/Linux内核报错“General protection fault”原因 – Linux Kernel Exploration.html">
+<link rel="shortlink" href="http://wp.me/p1y4E1-mo">
+<meta id="syntaxhighlighteranchor" name="syntaxhighlighter-version" content="3.1.3">
+ 
+<!--END head-->  
+<link rel="stylesheet" type="text/css" id="gravatar-card-css" href="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/hovercard.css"><link rel="stylesheet" type="text/css" id="gravatar-card-services-css" href="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/services.css"><script>window["_GOOG_TRANS_EXT_VER"] = "1";</script></head>
+
+
+
+<!--BEGIN body-->
+<body class="single single-post postid-1388 single-format-standard">
+
+
+<div id="top"></div>
+
+
+
+
+
+	<!--BEGIN .header-->
+		<div class="header" style="margin: 0 auto;">
+    
+	<!--BEGIN .container-->
+	<div class="container" style="margin-bottom:0px;">
+  
+  
+  <div class="radial-effect"></div>
+  
+  
+  
+  <!-- AD Space 1 -->
+  
+  
+  
+                            
+  
+  
+  
+    
+      
+     
+      
+     
+     
+          
+     
+      
+     
+     
+       
+			<div id="logo"><span></span><a href="http://ilinuxkernel.com/">Linux Kernel Exploration</a></div>
+      
+      <div id="tagline">Linux Kernel Fundamentals</div>
+	<!--END .container-->
+		</div>
+    
+    		<!--END .header-->
+		</div>
+    
+  
+  <div class="menu-container">
+          	
+	<div class="menu-back">
+  
+  
+
+  
+  <!--BEGIN .container-menu-->
+  <div class="container nacked-menu" style="margin:0 auto;padding-bottom:10px;position:relative;z-index:99;">
+
+        
+   <div class="menu-header">
+
+          
+      
+	        <div class="menu"><ul class="nav sf-js-enabled"><li><a href="http://ilinuxkernel.com/" title="Home">Home</a></li><li class="page_item page-item-646"><a href="http://ilinuxkernel.com/?page_id=646">About Me</a></li></ul></div>
+          
+           
+          
+          </div> 
+       
+              
+       
+       
+       
+       </div>
+
+
+        <!--BEGIN header-content.php -->
+        
+           
+         
+        <!--END header-content.php -->
+        
+        
+             
+     <!-- AD Space 2 -->
+  
+  
+     
+      
+      
+      </div> 
+       
+             	<!--BEGIN .content-->
+	<div class="content cyq526singular single s-category-%e5%86%85%e6%a0%b8%e5%9f%ba%e7%a1%80 s-category-%e6%9c%8d%e5%8a%a1%e5%99%a8%e7%a1%ac%e4%bb%b6 s-author-none linux chrome ch">  
+  
+ 
+
+
+       	<!--BEGIN .container-->
+	<div class="container" style="margin:0px auto;">
+  
+   
+
+
+		<!--BEGIN #content-->
+		<div id="content">
+    
+    
+    
+
+
+	
+
+
+    
+    
+      
+
+
+
+			<!--BEGIN #primary .hfeed-->
+			<div id="primary" class="hfeed">
+      
+
+     
+ 
+ <!---------------------- 
+ ---- attachment begin
+ ----------------------->  
+
+
+  
+ 
+                                 
+                  
+
+				<!--BEGIN .hentry-->
+				<div id="post-1388" class="post-1388 post type-post status-publish format-standard hentry category-3 category-8 p publish first-post cat untagged">
+					
+
+
+
+            <h1 class="entry-title">Linux内核报错“General protection fault”原因</h1>
+        
+        
+					<!--BEGIN .entry-meta .entry-header-->
+					<div class="entry-meta entry-header">
+          <a href="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/Linux内核报错“General protection fault”原因 – Linux Kernel Exploration.html"><span class="published">Jul19<br><strong>2012</strong></span></a>
+ 
+                     
+          <span class="comment-count"><a href="http://ilinuxkernel.com/?p=1388#respond" title="Comment on Linux内核报错“General protection fault”原因">Leave a Comment</a></span>
+                   
+          
+          <span class="author vcard">
+          
+                    
+          
+
+          Written by <strong><a class="url fn" href="http://ilinuxkernel.com/?author=1" title="View all posts by chen">chen</a></strong></span>
+						
+						
+            				    					<!--END .entry-meta .entry-header-->
+                    </div>                       
+                    
+         <!-- AD Space 7 -->
+  
+  
+                         
+      
+			<!--BEGIN .entry-content .article-->
+					<div class="entry-content article">
+						<p align="left"><span style="font-family: arial,helvetica,sans-serif;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="font-size: medium;"> 在Linux系统中，偶尔遇到内核报告”General protection fault”或#GP Fault，然后panic，系统宕机。在Intel编程手册中指出，General protection fault中断号为13，表示内存访问或保护检查出现异常。14号中断就是我们所熟悉的页面异常。</span></span></p>
+<table style="width: 495px; height: 281px;" border="0" cellspacing="0" cellpadding="0">
+<colgroup>
+<col span="2" width="72">
+<col width="202">
+<col span="2" width="72">
+<col width="413"> </colgroup>
+<tbody>
+<tr>
+<td align="right" width="72" height="19"><span style="font-family: arial,helvetica,sans-serif;">12</span></td>
+<td width="72"><span style="font-family: arial,helvetica,sans-serif;">#SS</span></td>
+<td width="202"><span style="font-family: arial,helvetica,sans-serif;">Stack-Segment Fault</span></td>
+<td width="72"><span style="font-family: arial,helvetica,sans-serif;">Fault</span></td>
+<td width="72"><span style="font-family: arial,helvetica,sans-serif;">Yes</span></td>
+<td width="413"><span style="font-family: arial,helvetica,sans-serif;">Stack operations and SS register loads.</span></td>
+</tr>
+<tr>
+<td align="right" height="19"><span style="font-family: arial,helvetica,sans-serif;">13</span></td>
+<td><span style="font-family: arial,helvetica,sans-serif;">#GP</span></td>
+<td><span style="font-family: arial,helvetica,sans-serif;">General Protection</span></td>
+<td><span style="font-family: arial,helvetica,sans-serif;">Fault</span></td>
+<td><span style="font-family: arial,helvetica,sans-serif;">Yes</span></td>
+<td><span style="font-family: arial,helvetica,sans-serif;"><strong><span style="color: #ff0000;">Any memory reference and other protection checks.</span></strong></span></td>
+</tr>
+<tr>
+<td align="right" height="19"><span style="font-family: arial,helvetica,sans-serif;">14</span></td>
+<td><span style="font-family: arial,helvetica,sans-serif;">#PF</span></td>
+<td><span style="font-family: arial,helvetica,sans-serif;">Page Fault</span></td>
+<td><span style="font-family: arial,helvetica,sans-serif;">Fault</span></td>
+<td><span style="font-family: arial,helvetica,sans-serif;">Yes</span></td>
+<td><span style="font-family: arial,helvetica,sans-serif;">Any memory reference.</span></td>
+</tr>
+</tbody>
+</table>
+<p><span style="font-family: arial,helvetica,sans-serif; font-size: medium;">以下是”General protection fault”更为详细的解释。</span></p>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif;">A <strong>general protection fault</strong> (GPF) in the <a title="Intel" href="http://en.wikipedia.org/wiki/Intel">Intel</a> <a title="X86" href="http://en.wikipedia.org/wiki/X86">x86</a> and <a title="AMD" href="http://en.wikipedia.org/wiki/AMD">AMD</a> <a title="X86-64" href="http://en.wikipedia.org/wiki/X86-64">x86-64</a> <a title="CPU Architecture" href="http://en.wikipedia.org/wiki/CPU_Architecture">architectures</a>, and other unrelated architectures, is a <a title="Fault (technology)" href="http://en.wikipedia.org/wiki/Fault_%28technology%29">fault</a> (a type of <a title="Interrupt" href="http://en.wikipedia.org/wiki/Interrupt">interrupt</a>) that can encompass several cases in which protection mechanisms within the <a title="Processor architecture" href="http://en.wikipedia.org/wiki/Processor_architecture">processor architecture</a> are violated by any of the programs that are running, either the <a title="Kernel (computing)" href="http://en.wikipedia.org/wiki/Kernel_%28computing%29">kernel</a> or a user program. The mechanism is first described in section 9.8.13 in the Intel 80386 programmer’s reference manual from 1986. A general protection fault is implemented as an <a title="Interrupt" href="http://en.wikipedia.org/wiki/Interrupt">interrupt</a> (<a title="Interrupt vector" href="http://en.wikipedia.org/wiki/Interrupt_vector">vector</a> number 13 in <a title="Decimal" href="http://en.wikipedia.org/wiki/Decimal">decimal</a>) in both <a title="X86" href="http://en.wikipedia.org/wiki/X86">x86</a> and <a title="AMD64" href="http://en.wikipedia.org/wiki/AMD64">AMD64</a> architectures.</span></p>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif;">If the processor detects a protection violation, it stops executing the code and sends a GPF interrupt. In most cases the operating system will simply remove the failing process from the execution queue, signal the user, and continue executing another program. If however the operating system fails to catch the general protection fault, i.e. another protection violation occurs before the <a title="Operating system" href="http://en.wikipedia.org/wiki/Operating_system">operating system</a> returns from the previous GPF interrupt, the processor will signal a <a title="Double fault" href="http://en.wikipedia.org/wiki/Double_fault">double fault</a> (<a title="Interrupt vector" href="http://en.wikipedia.org/wiki/Interrupt_vector">interrupt vector</a> 8, a typical <a title="BSOD" href="http://en.wikipedia.org/wiki/BSOD">BSOD</a> scenario). If yet another failure occurs, the processor will shut down (see <a title="Triple fault" href="http://en.wikipedia.org/wiki/Triple_fault">triple fault</a>). It will then only respond to a reset (that is, pressing the reset-button) or init (rebooting the entire system) and <a title="Non-maskable interrupt" href="http://en.wikipedia.org/wiki/Non-maskable_interrupt">non-maskable interrupts</a> (unless it has previously failed when handling <a title="Non-maskable interrupt" href="http://en.wikipedia.org/wiki/Non-maskable_interrupt">NM</a> interrupts, in which case it will ignore these too).</span></p>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif;">In systems such as <a title="Unix" href="http://en.wikipedia.org/wiki/Unix">Unix</a> and <a title="Linux" href="http://en.wikipedia.org/wiki/Linux">Linux</a>, the errors are reported separately (e.g. <a title="Segmentation fault" href="http://en.wikipedia.org/wiki/Segmentation_fault">segmentation fault</a> for memory errors).</span></p>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif; font-size: x-large;"><strong>1 Memory errors</strong></span></p>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif;">n memory errors, the faulting program accesses <a title="Computer memory" href="http://en.wikipedia.org/wiki/Computer_memory">memory</a>that it should not access. Examples include:</span></p>
+<ul>
+<li><span style="font-family: arial,helvetica,sans-serif;">Writing to a <a title="Read-only memory" href="http://en.wikipedia.org/wiki/Read-only_memory">read-only</a> portion of memory</span></li>
+<li><span style="font-family: arial,helvetica,sans-serif;">Attempting to execute <a title="Byte" href="http://en.wikipedia.org/wiki/Byte">bytes</a> in memory which are not designated as <a title="Instruction (computer science)" href="http://en.wikipedia.org/wiki/Instruction_%28computer_science%29">instructions</a></span></li>
+<li><span style="font-family: arial,helvetica,sans-serif;">Attempting to read as data bytes in memory which are designated as instructions</span></li>
+<li><span style="font-family: arial,helvetica,sans-serif;">Other miscellaneous conflicts between the designation of a part of memory and its use</span></li>
+</ul>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif;">However, many modern operating systems implement their memory access-control schemes via paging instead of segmentation, so it is often the case that invalid memory references in operating systems such as Windows are reported via page faults instead of general protection faults. Operating systems typically provide an abstraction layer (such as exception handling or signals) that hides whatever internal processor mechanism was used to raise a memory access error from a program, for the purposes of providing a standard interface for handling many different types of processor-generated error conditions.</span></p>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif;">In terms of the <a title="X86" href="http://en.wikipedia.org/wiki/X86">x86</a> architecture, general protection faults are specific to segmentation-based protection when it comes to memory accesses. However, general protection faults are still used to report other protection violations (aside from memory access violations) when paging is used, such as the use of instructions not accessible from the <a title="Current privilege level" href="http://en.wikipedia.org/wiki/Current_privilege_level">current privilege level</a>.</span></p>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif;">While it is theoretically possible for an operating system to utilize both paging and segmentation, for the most part, common operating systems typically rely on paging for the bulk of their memory access control needs.</span></p>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif; font-size: x-large;"><strong>2 Privilege errors</strong></span></p>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif;">There are some things on a computer which are reserved for the exclusive use of the <a title="Operating system" href="http://en.wikipedia.org/wiki/Operating_system">operating system</a>. If a program which is not part of the operating system attempts to use one of these features, it may cause a general protection fault.</span></p>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif;">Additionally, there are storage locations which are reserved both for the operating system and the processor itself. As a consequence of their reservation, they are read-only and an attempt to write <a title="Data" href="http://en.wikipedia.org/wiki/Data">data</a> to them by an unprivileged program is an error.</span></p>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif;">&nbsp;</span></p>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif; font-size: x-large;"><strong>3 Technical causes for faults</strong></span></p>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif;">General protection faults are raised by the processor when a protected instruction is encountered which exceeds the permission level of the currently executing task – either because a user-mode program is attempting a protected instruction, or because the operating system has issued a request which would put the processor into an undefined state.</span></p>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif;">General protection faults are caught and handled by modern operating systems. Generally, if the fault originated in a user-mode program, the user-mode program is terminated. If, however, the fault originated in a core system driver or the operating system itself, the operating system usually saves diagnostic information either to a file or to the screen, and then either causes a <a title="Blue screen of death" href="http://en.wikipedia.org/wiki/Blue_screen_of_death">blue screen of death</a> or restarts the computer.</span></p>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif; font-size: large;"><strong>1) Segment limits exceeded</strong></span></p>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif;">Segment limits can be exceeded:</span></p>
+<ul>
+<li><span style="font-family: arial,helvetica,sans-serif;">with <a title="Code segment" href="http://en.wikipedia.org/wiki/Code_segment">code segment</a> (CS), <a title="Data segment" href="http://en.wikipedia.org/wiki/Data_segment">data segment</a> (DS), or ES, FS, or GS (extra segment) registers; or</span></li>
+<li><span style="font-family: arial,helvetica,sans-serif;">accessing descriptor tables such as the <a title="Global Descriptor Table" href="http://en.wikipedia.org/wiki/Global_Descriptor_Table">Global Descriptor Table</a> (GDT), the <a title="Interrupt descriptor table" href="http://en.wikipedia.org/wiki/Interrupt_descriptor_table">Interrupt descriptor table</a> (IDT) and the <a title="Local Descriptor Table" href="http://en.wikipedia.org/wiki/Local_Descriptor_Table">Local Descriptor Table</a> (LDT).</span></li>
+</ul>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif; font-size: large;"><strong>2) Segment permissions violated</strong></span></p>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif;">Segment permissions can be violated by:</span></p>
+<ul>
+<li><span style="font-family: arial,helvetica,sans-serif;">jumping to non-executable segments</span></li>
+<li><span style="font-family: arial,helvetica,sans-serif;">writing to code segments, or read only segments</span></li>
+<li><span style="font-family: arial,helvetica,sans-serif;">reading execute-only segments</span></li>
+</ul>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif; font-size: large;"><strong>3) Segments illegally loaded</strong></span></p>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif;">This can occur when:</span></p>
+<ul>
+<li><span style="font-family: arial,helvetica,sans-serif;">a stack segment (SS) is loaded with a segment selector for a read only, executable, null segment, or segment with descriptor privilege not matching the current privilege in CS</span></li>
+<li><span style="font-family: arial,helvetica,sans-serif;">a code segment (CS) loaded with a segment selector for a data, system, or null segment</span></li>
+<li><span style="font-family: arial,helvetica,sans-serif;">SS, DS, ES, FS, or GS are segments loaded with a segment selector for a system segment</span></li>
+<li><span style="font-family: arial,helvetica,sans-serif;">SS, DS, ES, FS, or GS are segments loaded with a segment selector for an execute-only code segment</span></li>
+<li><span style="font-family: arial,helvetica,sans-serif;">accessing memory using DS, ES, FS, or GS registers, when they contain a null selector</span></li>
+</ul>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif; font-size: large;"><strong>4) Switching</strong></span></p>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif;">Faults can occur in the task state segment (TSS) structure when:</span></p>
+<ul>
+<li><span style="font-family: arial,helvetica,sans-serif;">switching to a busy task during a call or jump instruction</span></li>
+<li><span style="font-family: arial,helvetica,sans-serif;">switching to an available task during an interrupt return (IRET) instruction</span></li>
+<li><span style="font-family: arial,helvetica,sans-serif;">using a segment selector on a switch pointing to a TSS descriptor in the LDT</span></li>
+</ul>
+<h2><span style="font-family: arial,helvetica,sans-serif; font-size: x-large; color: #000000;">4 Miscellaneous</span></h2>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif;">Other causes of general protection faults are:</span></p>
+<ul>
+<li><span style="font-family: arial,helvetica,sans-serif;">attempting to access an interrupt/exception handler from <a title="V86 mode" href="http://en.wikipedia.org/wiki/V86_mode">v86 mode</a> when the handler’s code segment descriptor <a title="Privilege level" href="http://en.wikipedia.org/wiki/Privilege_level">privilege level</a> (DPL) is greater than zero</span></li>
+<li><span style="font-family: arial,helvetica,sans-serif;">attempting to write a one into the reserved bits of <a title="Control register" href="http://en.wikipedia.org/wiki/Control_register">CR4</a></span></li>
+<li><span style="font-family: arial,helvetica,sans-serif;">attempting to execute privileged instructions when the current privilege level (CPL) is not zero</span></li>
+<li><span style="font-family: arial,helvetica,sans-serif;">writing to a reserved bit in an MSR instruction</span></li>
+<li><span style="font-family: arial,helvetica,sans-serif;">accessing a gate containing a null segment selector</span></li>
+<li><span style="font-family: arial,helvetica,sans-serif;">executing a software interrupt when the CPL is greater than the DPL set for the interrupt gate</span></li>
+<li><span style="font-family: arial,helvetica,sans-serif;">the segment selector in a call, interrupt or trap gate does not point to a code segment</span></li>
+<li><span style="font-family: arial,helvetica,sans-serif;">exceeding the instruction length of 15 bytes</span></li>
+<li><span style="font-family: arial,helvetica,sans-serif;">violating privilege rules</span></li>
+<li><span style="font-family: arial,helvetica,sans-serif;">enabling paging whilst disabling protection</span></li>
+<li><span style="font-family: arial,helvetica,sans-serif;">referencing the interrupt descriptor table following an interrupt or exception that is not an interrupt, trap, or a task gate</span></li>
+</ul>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif;">来源：http://en.wikipedia.org/wiki/General_protection_fault</span></p>
+<p align="left"><span style="font-family: arial,helvetica,sans-serif;">&nbsp;</span></p>
+<p><span style="font-family: arial,helvetica,sans-serif;">&nbsp;</span></p>
+            					<!--END .entry-content .article-->
+					
+          <div style="clear:both;"></div>
+          </div>
+          
+          
+          
+         <!-- AD Space 8 -->
+  
+                 
+
+						<!--BEGIN .entry-meta .entry-footer-->
+                    <div class="entry-meta entry-footer">
+                    	                    	<span class="entry-categories"><strong>Posted in</strong> <a href="http://ilinuxkernel.com/?cat=3" title="View all posts in 内核基础" rel="category">内核基础</a>, <a href="http://ilinuxkernel.com/?cat=8" title="View all posts in 服务器硬件" rel="category">服务器硬件</a></span>
+                      											<!--END .entry-meta .entry-footer-->
+                    </div>
+                    
+                    
+                                   
+                    <!-- Auto Discovery Trackbacks
+					<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+			xmlns:dc="http://purl.org/dc/elements/1.1/"
+			xmlns:trackback="http://madskills.com/public/xml/rss/module/trackback/">
+		<rdf:Description rdf:about="http://ilinuxkernel.com/?p=1388"
+    dc:identifier="http://ilinuxkernel.com/?p=1388"
+    dc:title="Linux内核报错“General protection fault”原因"
+    trackback:ping="http://ilinuxkernel.com/wp-trackback.php?p=1388" />
+</rdf:RDF>					-->
+				<!--END .hentry-->
+				</div>
+        
+          <div class="share-this">
+          <strong>SHARE THIS</strong>
+          <a rel="nofollow" target="_blank" class="share-twitter" href="http://twitter.com/intent/tweet?status=Linux%E5%86%85%E6%A0%B8%E6%8A%A5%E9%94%99%E2%80%9CGeneral%20protection%20fault%E2%80%9D%E5%8E%9F%E5%9B%A0+%C2%BB+http://tinyurl.com/6oyygc5">Twitter</a>
+          <a rel="nofollow" target="_blank" class="share-facebook" href="http://www.facebook.com/sharer/sharer.php?u=http://ilinuxkernel.com/?p=1388&t=Linux%E5%86%85%E6%A0%B8%E6%8A%A5%E9%94%99%E2%80%9CGeneral%20protection%20fault%E2%80%9D%E5%8E%9F%E5%9B%A0">Facebook</a>
+          <a rel="nofollow" target="_blank" class="share-delicious" href="http://del.icio.us/post?url=http://ilinuxkernel.com/?p=1388&title=Linux%E5%86%85%E6%A0%B8%E6%8A%A5%E9%94%99%E2%80%9CGeneral%20protection%20fault%E2%80%9D%E5%8E%9F%E5%9B%A0">Delicious</a>
+          <a rel="nofollow" target="_blank" class="share-stumble" href="http://www.stumbleupon.com/submit?url=http://ilinuxkernel.com/?p=1388&title=Linux%E5%86%85%E6%A0%B8%E6%8A%A5%E9%94%99%E2%80%9CGeneral%20protection%20fault%E2%80%9D%E5%8E%9F%E5%9B%A0">StumbleUpon</a>
+          <a rel="nofollow" target="_blank" class="share-email" href="http://www.addtoany.com/email?linkurl=http://ilinuxkernel.com/?p=1388&linkname=Linux%E5%86%85%E6%A0%B8%E6%8A%A5%E9%94%99%E2%80%9CGeneral%20protection%20fault%E2%80%9D%E5%8E%9F%E5%9B%A0">E-mail</a>
+          <a rel="nofollow" class="tipsytext" style="position:relative;top:3px;left:8px;" target="_blank" href="http://www.addtoany.com/share_save#url=http://ilinuxkernel.com/?p=1388&linkname=Linux内核报错“General protection fault”原因" original-title="More options"><img src="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/share-more.png"></a>
+          </div>
+        
+        
+        
+        
+  
+
+       
+                       
+				<!--BEGIN .navigation-links-->
+<div class="navigation-links single-page-navigation" style="clear:both;">
+	<div class="nav-previous"><a href="http://ilinuxkernel.com/?p=1378" rel="prev">← [转]Local and Remote Memory: Memory in a Linux NUMA System</a></div>
+	<div class="nav-next"><a href="http://ilinuxkernel.com/?p=1400" rel="next">[转]GoAgent图文设置教程：碉堡了，从此无限制上网 →</a></div>
+<!--END .navigation-links-->
+</div>
+<div style="clear:both;"></div>
+
+        
+           
+
+				
+<div id="comments">   
+	<span class="comments-title-back"><h3 class="comment-title"><span class="comment-title-meta no-comment">No Comments Yet</span></h3><span class="comment-feed-link"><a class="tipsytext follow-replies" href="http://ilinuxkernel.com/?feed=rss2&p=1388" original-title="Follow replies"></a></span></span></div>
+
+<!--BEGIN #respond-->
+
+
+    
+    
+  
+    <!--BEGIN #comment-form-->
+
+<div style="clear:both;"></div>        
+
+						
+		<div id="respond">
+			<div id="cancel-comment-reply-link" style="display:none; float:right;"><a href="http://ilinuxkernel.com/?p=1388#">Cancel Reply</a></div>
+			<iframe src="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/saved_resource.html" allowtransparency="false" style="width:100%; height: 430px;border:0px;" frameborder="0" scrolling="no" name="jetpack_remote_comment" id="jetpack_remote_comment"></iframe>
+		</div>
+
+		
+		<input type="hidden" name="comment_parent" id="comment_parent" value="">
+
+					    <!--END #comment-form-->
+   
+    
+
+<!--END #respond-->
+
+
+
+                
+				
+ <!---------------------- 
+ ---- single post end
+ -----------------------> 
+
+
+ <!---------------------- 
+ ---- home/date/category/tag/search/author begin
+ ----------------------->         
+      
+      
+
+			<!--END #primary .hfeed-->
+			</div>
+      
+      
+
+        <!--BEGIN #secondary .aside-->
+        <div id="secondary" class="aside">
+        
+      
+      
+  <!-- AD Space 3 -->
+  
+  
+     
+        
+        
+        
+					<div id="recent-posts-2" class="widget widget_recent_entries"><div class="widget-content">		<div style="position:relative;top:-10px;"><div class="widget-title-background"></div><h3 class="widget-title">Recent Posts</h3></div>		<ul>
+				<li><a href="http://ilinuxkernel.com/?p=1400" title="[转]GoAgent图文设置教程：碉堡了，从此无限制上网">[转]GoAgent图文设置教程：碉堡了，从此无限制上网</a></li>
+				<li><a href="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/Linux内核报错“General protection fault”原因 – Linux Kernel Exploration.html" title="Linux内核报错“General protection fault”原因">Linux内核报错“General protection fault”原因</a></li>
+				<li><a href="http://ilinuxkernel.com/?p=1378" title="[转]Local and Remote Memory: Memory in a Linux NUMA System">[转]Local and Remote Memory: Memory in a Linux NUMA System</a></li>
+				<li><a href="http://ilinuxkernel.com/?p=1371" title="Linux物理内存页面分配">Linux物理内存页面分配</a></li>
+				<li><a href="http://ilinuxkernel.com/?p=1363" title="LSI SAS控制器驱动报告Invalid Page原因分析">LSI SAS控制器驱动报告Invalid Page原因分析</a></li>
+				</ul>
+		</div></div><div id="categories-4" class="widget widget_categories"><div class="widget-content"><div style="position:relative;top:-10px;"><div class="widget-title-background"></div><h3 class="widget-title">Categories</h3></div>		<ul>
+	<li class="cat-item cat-item-15"><a href="http://ilinuxkernel.com/?cat=15" title="View all posts filed under Android">Android</a>
+</li>
+	<li class="cat-item cat-item-13"><a href="http://ilinuxkernel.com/?cat=13" title="x86/x86_64 CPU基础">CPU基础</a>
+</li>
+	<li class="cat-item cat-item-14"><a href="http://ilinuxkernel.com/?cat=14" title="View all posts filed under Hadoop">Hadoop</a>
+</li>
+	<li class="cat-item cat-item-7"><a href="http://ilinuxkernel.com/?cat=7" title="View all posts filed under I/O系统">I/O系统</a>
+</li>
+	<li class="cat-item cat-item-11"><a href="http://ilinuxkernel.com/?cat=11" title="View all posts filed under 其他">其他</a>
+</li>
+	<li class="cat-item cat-item-4"><a href="http://ilinuxkernel.com/?cat=4" title="View all posts filed under 内存管理">内存管理</a>
+</li>
+	<li class="cat-item cat-item-3"><a href="http://ilinuxkernel.com/?cat=3" title="View all posts filed under 内核基础">内核基础</a>
+</li>
+	<li class="cat-item cat-item-9"><a href="http://ilinuxkernel.com/?cat=9" title="View all posts filed under 娱乐八卦">娱乐八卦</a>
+</li>
+	<li class="cat-item cat-item-8"><a href="http://ilinuxkernel.com/?cat=8" title="View all posts filed under 服务器硬件">服务器硬件</a>
+</li>
+	<li class="cat-item cat-item-1"><a href="http://ilinuxkernel.com/?cat=1" title="View all posts filed under 电源管理">电源管理</a>
+</li>
+	<li class="cat-item cat-item-10"><a href="http://ilinuxkernel.com/?cat=10" title="View all posts filed under 系统使用">系统使用</a>
+</li>
+		</ul>
+</div></div>		<!--END #secondary .aside-->
+    
+    
+      <!-- AD Space 4 -->
+  
+  
+     
+    
+    
+		</div>  
+    
+		<!--END #content-->
+		</div>
+    
+    	<!--END .container-->
+	</div> 
+  
+  
+
+      	<!--END .content-->
+	</div> 
+  
+     <!--BEGIN .content-bottom--> 
+  <div class="content-bottom">
+  
+       	<!--END .content-bottom-->
+  </div>
+			
+		<!--BEGIN .footer-->
+		<div class="footer">
+    
+    <div class="footer-top"></div>
+    
+    <div class="radial-effect" style="height:100px;"></div>
+    
+  
+   	<!--BEGIN .container-->
+	<div class="container" style="margin-bottom:0;position:relative;">    
+  
+  
+           <!-- AD Space 9 -->
+  
+  
+     
+
+
+  
+
+<div style="clear:both;"></div> 
+  
+     
+
+
+ 
+
+  
+  
+
+			<!-- Theme Hook -->
+      
+      
+
+<script type="text/javascript" charset="utf-8">
+var $jx = jQuery.noConflict();
+  $jx("div.post").mouseover(function() {
+    $jx(this).find("span.edit-post").css('visibility', 'visible');
+  }).mouseout(function(){
+    $jx(this).find("span.edit-post").css('visibility', 'hidden');
+  });
+  
+    $jx("div.type-page").mouseover(function() {
+    $jx(this).find("span.edit-page").css('visibility', 'visible');
+  }).mouseout(function(){
+    $jx(this).find("span.edit-page").css('visibility', 'hidden');
+  });
+  
+      $jx("div.type-attachment").mouseover(function() {
+    $jx(this).find("span.edit-post").css('visibility', 'visible');
+  }).mouseout(function(){
+    $jx(this).find("span.edit-post").css('visibility', 'hidden');
+  });
+  
+  $jx("li.comment").mouseover(function() {
+    $jx(this).find("span.edit-comment").css('visibility', 'visible');
+  }).mouseout(function(){
+    $jx(this).find("span.edit-comment").css('visibility', 'hidden');
+  });
+</script> 
+
+<script type="text/javascript" charset="utf-8">
+var $j = jQuery.noConflict();
+  $j(document).ready(function(){  
+    $j('.tipsytext').tipsy({gravity:'n',fade:true,offset:0,opacity:1});
+   });
+   </script> 
+
+  
+	
+<p id="copyright" style="margin-top:20px;"><span class="credits" style="float:right;"><a href="http://theme4press.com/evolve/">EvoLve</a> theme by Theme4Press&nbsp;&nbsp;•&nbsp;&nbsp;Powered by <a href="http://wordpress.org/">WordPress</a></span> <a href="http://ilinuxkernel.com/">Linux Kernel Exploration</a><br><small>Linux Kernel Fundamentals</small></p> 
+      
+		  
+
+          	<!--END .container-->  
+	</div> 
+
+ 
+		
+		<!--END .footer-->
+		</div>
+
+<!--END body-->  
+
+
+
+     
+     <div id="backtotop" style="display: block; "><a href="http://ilinuxkernel.com/?p=1388#top" id="top-link"><span class="top-icon">Back to Top</span></a></div>   
+
+
+
+<script type="text/javascript" src="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/gprofiles.js"></script>
+<script type="text/javascript">
+/* <![CDATA[ */
+var WPGroHo = {"my_hash":""};
+/* ]]> */
+</script>
+<script type="text/javascript" src="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/wpgroho.js"></script>
+	<div style="display:none">
+	</div>
+<script type="text/javascript" src="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/hoverIntent.js"></script>
+<script type="text/javascript" src="./Linux内核报错“General protection fault”原因 – Linux Kernel Exploration_files/devicepx-jetpack.js"></script>
+
+		<!--[if IE]>
+		<script type="text/javascript">
+		if ( 0 === window.location.hash.indexOf( '#comment-' ) ) {
+			// window.location.reload() doesn't respect the Hash in IE
+			window.location.hash = window.location.hash;
+		}
+		</script>
+		<![endif]-->
+		<script type="text/javascript">
+			var comm_par_el = document.getElementById( 'comment_parent' ),
+			    comm_par = (comm_par_el && comm_par_el.value) ? comm_par_el.value : '',
+			    frame = document.getElementById( 'jetpack_remote_comment' ),
+			    tellFrameNewParent;
+
+			tellFrameNewParent = function() {
+				if ( comm_par ) {
+					frame.src = "http:\/\/jetpack.wordpress.com\/jetpack-comment\/?blogid=22897345&postid=1388&comment_registration=0&require_name_email=1&stc_enabled=1&stb_enabled=1&show_avatars=0&avatar_default=gravatar_default&greeting=Leave+a+Reply&color_scheme=light&lang=en-US&jetpack_version=1.8.2&sig=51b909b9bd5734eceec8525dd0cf9e38cce61848#parent=http%3A%2F%2Filinuxkernel.com%2F%3Fp%3D1388" + '&replytocom=' + parseInt( comm_par, 10 ).toString();
+				} else {
+					frame.src = "http:\/\/jetpack.wordpress.com\/jetpack-comment\/?blogid=22897345&postid=1388&comment_registration=0&require_name_email=1&stc_enabled=1&stb_enabled=1&show_avatars=0&avatar_default=gravatar_default&greeting=Leave+a+Reply&color_scheme=light&lang=en-US&jetpack_version=1.8.2&sig=51b909b9bd5734eceec8525dd0cf9e38cce61848#parent=http%3A%2F%2Filinuxkernel.com%2F%3Fp%3D1388";
+				}
+			};
+
+	
+			if ( 'undefined' !== typeof addComment ) {
+				addComment._Jetpack_moveForm = addComment.moveForm;
+
+				addComment.moveForm = function( commId, parentId, respondId, postId ) {
+					var returnValue = addComment._Jetpack_moveForm( commId, parentId, respondId, postId ), cancelClick, cancel;
+
+					if ( false === returnValue ) {
+						cancel = document.getElementById( 'cancel-comment-reply-link' );
+						cancelClick = cancel.onclick;
+						cancel.onclick = function() {
+							var cancelReturn = cancelClick.call( this );
+							if ( false !== cancelReturn ) {
+								return cancelReturn;
+							}
+
+							if ( !comm_par ) {
+								return cancelReturn;
+							}
+
+							comm_par = 0;
+
+							tellFrameNewParent();
+
+							return cancelReturn;
+						};
+					}
+
+					if ( comm_par == parentId ) {
+						return returnValue;
+					}
+
+					comm_par = parentId;
+
+					tellFrameNewParent();
+
+					return returnValue;
+				};
+			}
+
+	
+			if ( window.postMessage ) {
+				if ( document.addEventListener ) {
+					window.addEventListener( 'message', function( event ) {
+						if ( "http:\/\/jetpack.wordpress.com" !== event.origin ) {
+							return;
+						}
+
+						jQuery( frame ).height( event.data );
+					} );
+				} else if ( document.attachEvent ) {
+					window.attachEvent( 'message', function( event ) {
+						if ( "http:\/\/jetpack.wordpress.com" !== event.origin ) {
+							return;
+						}
+
+						jQuery( frame ).height( event.data );
+					} );
+				}
+			}
+		</script>
+
+	
+	<script src="http://stats.wordpress.com/e-201242.js" type="text/javascript"></script>
+	<script type="text/javascript">
+	st_go({v:'ext',j:'1:1.8.2',blog:'22897345',post:'1388'});
+	var load_cmc = function(){linktracker_init(22897345,1388,2);};
+	if ( typeof addLoadEvent != 'undefined' ) addLoadEvent(load_cmc);
+	else load_cmc();
+	</script> 
+
+
+
+
+
+<!--END html(kthxbye)-->
+</div></body></html>

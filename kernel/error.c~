@@ -1,0 +1,27 @@
+static int error_index;
+static char *error_info[]={
+    "file not exist",
+    "file name error",
+    "dir not exist",
+    "system file descriptor or inode not enough",
+    "imap alloc error(imap not enough)",
+    "smap alloc error(smap not enough)",
+    "dir create error",
+    "inode create error",
+    "file descriptor pointer in process not enough",
+    "file not open",
+    "file open not for read",
+    "file open not for write",
+    "file has existed",
+};
+
+#define ERROR_TYPE_COUNT sizeof(error_info)
+
+void set_error_index(int index){
+    /* assert(index<sizeof(error_info),""); */
+    error_index=index;
+}
+
+char* get_error_info(){
+    return error_info[error_index];
+}

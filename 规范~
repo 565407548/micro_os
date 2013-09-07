@@ -1,0 +1,30 @@
+1.变量命名规则
+    1.1通过‘_’把变量名中的单词分割开
+    1.2变量名中的单词尽量不缩写(前缀例外)
+    1.3宏定义的变量（具名常量）统一用大写字符
+    1.4变量名中各个单词含义：类型_大类_小类,如：
+          REG_P_DATA(硬盘io端口的主设备数据寄存器)
+          INFO_FS_CREATE(文件系统的创建文件消息标示)   
+    1.5全局变量加前缀:g_，最好仅通过访问器子程序访问全局变量       
+
+2.函数命名规则
+    2.1通过‘_’把函数中的单词分割开
+    2.2函数名中的单词尽量不缩写（见例外）
+    2.3函数名第一个字符大写
+
+3.自定义类型
+    3.1全部用大写
+
+
+注意：
+1.常见单词统一缩写
+    command---cmd   register---reg   harddisk---hd   filesystem---fs
+    drive(r)---drv   interrupt---int  
+2.前缀
+    用户自定义类型_语义前缀_变量有意义的名称
+    用户自定义类型：
+        wn---window   scr---screen   reg---register
+    语义前缀
+        c---count   first/last   g---global   max/min   p---pointer
+        e---enum   s-struct   str---string   eit---enum_info_type
+        ept---enum_part_type   g---global
